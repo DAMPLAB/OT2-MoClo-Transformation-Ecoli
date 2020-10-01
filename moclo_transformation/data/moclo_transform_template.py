@@ -1,16 +1,17 @@
 #Modified version 2/28/20
 
-'''
-	Up to 88 rxns per single run and 24 rxns for triplicate of each combination of DNA assembly
-	Multichannel p300, single channel p10
-    This protocol is optimized for maximum walkaway time and percision
-	'''
+################################################################################
+# Up to 88 rxns per single run and 24 rxns for triplicate of each combination of DNA assembly
+
+#This protocol is optimized for maximum walkaway time and percision
+################################################################################
 
 import time
 import math
 
 from opentrons import robot, instruments, labware, modules
 
+################################################################################
 '''
 COLD_BLOCK = '96-PCR-tall-cold-block'
 try:
@@ -24,13 +25,14 @@ try:
 except:
 	print("Using existing labware definition for {0}".format(COLD_BLOCK))
 '''
+################################################################################
 
 num_rxns = len(combinations_to_make)
-#num_plates = math.ceil(num_rxns/24) # Amount of agar plates need for plating the transformed cells
+#num_plates = math.ceil(num_rxns/24) #Amount of agar plates need for plating the transformed cells
 
-'''
-	For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the Opentrons 96 well aluminum block.
-	'''
+################################################################################
+# For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the Opentrons 96 well aluminum block.
+################################################################################
 
 # Load in Bio-Rad 96 Well Plate on temp deck for moclos, transformation, and outgrowth.
 temp_deck = modules.load('tempdeck', '10')
@@ -38,7 +40,7 @@ reaction_plate = labware.load('biorad_96_wellplate_200ul_pcr', '10', share=True)
 temp_deck.set_temperature(10)
 
 # Load in 1 10ul tiprack and 2 300ul tipracks
-tr_10 = [labware.load('opentrons_96_tiprack_10ul', '3')]#, labware.load('opentrons_96_tiprack_10ul', '6')]
+tr_10 = [labware.load('opentrons_96_tiprack_10ul', '3')]
 tr_300 = [labware.load('opentrons_96_tiprack_300ul', '6'), labware.load('opentrons_96_tiprack_300ul', '9')]
 #for i in range(0, 1):
 #   tr_300.append(labware.load('tipone_96_tiprack_200ul', '9'))
@@ -47,16 +49,17 @@ tr_300 = [labware.load('opentrons_96_tiprack_300ul', '6'), labware.load('opentro
 p10_single = instruments.P10_Single(mount='right', tip_racks=tr_10)
 p300_multi = instruments.P300_Multi(mount='left', tip_racks=tr_300)
 
-''' Need to provide the instructions for loading reagent'''
+# Need to provide the instructions for loading reagent
 reagents_plate = labware.load('biorad_96_wellplate_200ul_pcr', '4', 'Reagents Plate')
 ligase = reagents_plate.wells('H12') #MoClo
 restriction_enzyme = reagents_plate.wells('G12') #MoClo
 buffer = reagents_plate.wells('F12') # MoClo
 
-'''
-	This deck slot location is dedicated for the reaction plate after MoClo protocol is completed, so at the beginning of the protocol there isn't an actual plate existing in this slot location.
-	'''
+################################################################################
+# This deck slot location is dedicated for the reaction plate after MoClo protocol is completed, so at the beginning of the protocol there isn't an actual plate existing in this slot location.
+
 post_moclo_reaction_plate = labware.load('biorad_96_wellplate_200ul_pcr', '7', 'Post-MoClo Reaction Plate')
+################################################################################
 
 # Load in water, SOC, and wash trough (USA Scientific 12 Well Reservoir 22ml)
 trough = labware.load('usascientific_12_reservoir_22ml', '5', 'Reagents trough')
@@ -79,11 +82,12 @@ agar_plate = labware.load('e-gelgol', '2', 'Agar Plate')
 
 #available_deck_slots = ['11', '8']
 
-#____________________________________Start the MoClo protocol_______________________________
+############################Start the MoClo protocol############################
 
-'''
-	For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the metal part.
-	'''
+################################################################################
+# For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the metal part.
+################################################################################
+
 # Add water, buffer, restriction enzyme, ligase, and buffer to 2x master mix (2xMM).
 #Prepare 2xMM for 2-part assembly at 20uL total volume
 for i in range(2):
@@ -201,7 +205,7 @@ p10_single.drop_tip()
 	p10_single.blow_out()
 	p10_single.drop_tip()
 	count += 1
-	
+
 	# Add 2xMM to 5-part assembly for varies volumes (5,10,20 uL)
 	count = 0
 	for i in range(3):
@@ -211,7 +215,7 @@ p10_single.drop_tip()
 	p10_single.blow_out()
 	p10_single.drop_tip()
 	count += 1
-	
+
 	# Add 2xMM to 8-part assembly for varies volumes (5,10,20 uL)
 	count = 0
 	for i in range(3):
@@ -221,7 +225,7 @@ p10_single.drop_tip()
 	p10_single.blow_out()
 	p10_single.drop_tip()
 	count += 1
-	'''
+'''
 
 #This function checks the existance of DNA parts and returns for well location of the parts
 def find_dna(name, dna_plate_map_dict, dna_plate_dict):
@@ -274,47 +278,26 @@ for part, combinations in combinations_by_part.items():
 	# Two washing steps are added to allow recycling of the tips
 	p10_single.drop_tip()
 
-# Incubate rxns for 2 hr (moclo), seal the Reaction Plate with adhesive film
-'''
-	Seal the Reaction Plate to avoid liquid evaporation.
-	Discard the empty PCR tubes previously containing buffer, ligase, and restriction enzyme.
-	Remove the Input_DNA_Plate from the Deck Space. Remaining DNA may be saved by sealing the Input_DNA_Plate with adhesive film and storing at -20°C
-'''
+# Seal the Reaction Plate with adhesive film, and incubate plate for 35 cycles of 37C for 1.5 minutes and 16C for 3 minutes, followed by 1 cycle at 50C for 5 minutes, and 80C for 10 minutes.
 
-'''start_time = time.time()
-temp_deck.set_temperature(37)
-p10_single.delay(minutes=120)
-num_cols = math.ceil(num_rxns/8.0)
+################################################################################
+# Seal the Reaction Plate to avoid liquid evaporation.
+# Discard the empty PCR tubes previously containing buffer, ligase, and restriction enzyme.
+# Remove the Input_DNA_Plate from the Deck Space. Remaining DNA may be saved by sealing the Input_DNA_Plate with adhesive film and storing at -20°C
+################################################################################
 
-#Adding 4 ul of water halfway through.
-	p10_single.pick_up_tip()
-	for i in combinations_to_make:
-	num_parts = len(i["parts"])
-	# Add an extra 4 ul of water for evaporation.
-	water_to_add = 4
-	well = find_combination(i["name"], combinations_to_make)
-	p10_single.transfer(water_to_add, water.bottom(), well.bottom(0.5), new_tip='never')
-	p10_single.mix(4, 10, well.bottom(0.5))
-	p10_single.mix(2, 10, wash_0.bottom(0.5))
-	p10_single.blow_out()
-	p10_single.mix(2, 10, wash_1.bottom(0.5))
-	p10_single.blow_out()
-	p10_single.drop_tip()
-	time_elapsed = time.time() - start_time
-	p10_single.delay(seconds=(120*60 - time_elapsed))
-
-temp_deck.set_temperature(4)
-'''
-temp_deck.deactivate()
 robot.pause()
 
-# _____________________Start the Transformation protocol________________________________
-'''
-	The robotic liquid handler would automatically pause when the modular cloning protocol is completed, indicated by the blue light (cooling down) of the Temperature Module.
-	Remove the reaction_plate from the top of the Temperature Module and place it on Slot 7 which is assigned to the post_moclo_reaction_plate at the beginning of the protocol, and remove the adhesive film.
-	Before beginning the Cell Transformation protocol, load 10 μL/well of chemically competent cells into a new Bio-Rad 96 Well Plate and place it on the top of the Temperature Module.
-	Be sure to un-pause the robot after completing all the steps listed above!
-	'''
+#####################Start the Transformation protocol##########################
+################################################################################
+# The robotic liquid handler would automatically pause when the modular cloning protocol is completed, indicated by the blue light (cooling down) of the Temperature Module.
+
+#Remove the reaction_plate from the top of the Temperature Module and place it on Slot 7 which is assigned to the post_moclo_reaction_plate at the beginning of the protocol, and remove the adhesive film.
+
+#Before beginning the Cell Transformation protocol, load 10 μL/well of chemically competent cells into a new Bio-Rad 96 Well Plate and place it on the top of the Temperature Module.
+
+#Be sure to un-pause the robot after completing all the steps listed above!
+################################################################################
 
 #for i in range(0, num_cols):
 #Using letters for rows of custom container to maintain backwards compatibility.
@@ -365,13 +348,17 @@ temp_deck.set_temperature(37)
 p10_single.delay(minutes=60)
 robot.pause()
 temp_deck.deactivate()
-'''
-	Remove the adhesive film from the Reaction Plate before perceeding to Cell Plating.
-	Be sure to un-pause the robot after removing the adhesive film!
-	'''
+
+################################################################################
+# Remove the adhesive film from the Reaction Plate before perceeding to Cell Plating.
+# Be sure to un-pause the robot after removing the adhesive film!
+################################################################################
 
 # Dilute the recovered transformation reactions and start plating
-'''All recovered transformation reactions are diluted to 10% of its original concentration before plating'''
+################################################################################
+# All recovered transformation reactions are diluted to 10% of its original concentration before plating
+################################################################################
+
 #Dilution
 p300_multi.pick_up_tip()
 for i in range(0, num_cols):
@@ -393,9 +380,9 @@ for i in range(0, num_cols):
 p300_multi.drop_tip()
 
 #Plating
-'''
-	Un-comment line 328, and line 333 through line 339 if you're plating for triplicate of each reactions.
-	'''
+################################################################################
+#Un-comment line 386, and line 390 through line 397 if you're plating for triplicate of each reactions.
+################################################################################
 #count2 = 0
 for i in range(0, num_cols):
 	p300_multi.pick_up_tip()
@@ -409,36 +396,3 @@ for i in range(0, num_cols):
 	#p300_multi.transfer(1, reaction_plate.cols(i).bottom(0.5), agar_plate.cols(i+count2+2).bottom(-1), new_tip='never')
 	#count2 += 2
 	p300_multi.drop_tip()
-
-
-'''
-	# Dilute and plate.
-	def spread_culture(source, dest, soc, dilute_after=True):
-	p300_multi.mix(2, 150, source.bottom(0.5))
-	p300_multi.aspirate(10, source.bottom(0.5))
-	p300_multi.dispense(9, dest.top())
-	p300_multi.dispense(1, dest.bottom(-1))
-	if dilute_after:
-	p300_multi.transfer(120, source.bottom(0.5), liquid_waste.bottom(), new_tip='never')
-	p300_multi.mix(2, 300, wash_0.bottom())
-	p300_multi.blow_out()
-	p300_multi.mix(2, 300, wash_1.bottom())
-	p300_multi.blow_out()
-	p300_multi.transfer(120, soc, source.bottom(0.5), new_tip='never')
-	
-	for i in range(0, num_cols):
-	agar_plate = agar_plates[i // 3]
-	agar_well_num = (i % 3) * 8 * 4
-	p300_multi.pick_up_tip()
-	source = reaction_plate.wells(48 + i * 8)
-	spread_culture(source, agar_plate.wells(agar_well_num), soc)
-	spread_culture(source, agar_plate.wells(agar_well_num + 8), soc)
-	spread_culture(source, agar_plate.wells(agar_well_num + 16), soc)
-	spread_culture(source, agar_plate.wells(agar_well_num + 24), soc, dilute_after=False)
-	p300_multi.drop_tip()
-	'''
-
-
-
-
-

@@ -7,15 +7,15 @@ import csv
 import json
 import yaml
 
-#################################################################################################################
+################################################################################
 # Constants
-#################################################################################################################
+################################################################################
 
 CONFIG_PATH = "data/settings.yaml"
 
-#################################################################################################################
+################################################################################
 # Main function of script
-#################################################################################################################
+################################################################################
 
 def main():
 
@@ -37,9 +37,9 @@ def main():
 	# Create a protocol file and hard code the plate maps into it.
 	create_protocol(dna_plate_map_dict, combinations_to_make, config['protocol_template_path'], config['output_folder_path'])
 
-#################################################################################################################
+################################################################################
 # Functions for getting user input
-#################################################################################################################
+################################################################################
 
 def get_config(config_path):
 
@@ -72,7 +72,7 @@ def ask_dna_plate_map_filename():
 
 	# Open dialog boxes asking user for dna plate map.
 	dna_plate_map_filename = filedialog.askopenfilename(title = "Select DNA plate map", filetypes = (("CSV files","*.CSV"),("all files","*.*")))
-	
+
 	return dna_plate_map_filename
 
 def ask_combinations_filename():
@@ -82,7 +82,7 @@ def ask_combinations_filename():
 
 	# Open dialog boxes asking user for combinations file.
 	combinations_filename = filedialog.askopenfilename(title = "Select file containing combinations to make.", filetypes = (("CSV files","*.CSV"),("all files","*.*")))
-	
+
 	return combinations_filename
 
 def generate_plate_maps(filename):
@@ -126,9 +126,9 @@ def check_number_of_combinations(combinations_limit, combinations_to_make):
 		if number_of_combinations > 24:
 			raise ValueError('Too many combinations ({0}) requested. Max for triplicate combinations is 24.'.format(number_of_combinations))
 
-#################################################################################################################
+################################################################################
 # Functions for creating output files
-#################################################################################################################
+################################################################################
 
 def generate_and_save_output_plate_maps(combinations_to_make, combinations_limit, output_folder_path):
 	# Split combinations_to_make into 8x6 plate maps.
@@ -184,12 +184,12 @@ def generate_and_save_output_plate_maps(combinations_to_make, combinations_limit
 
 	output_filename = os.path.join(output_folder_path, "Agar_plate.csv")
 	with open(output_filename, 'w+', newline='') as f:
-		writer = csv.writer(f)          
+		writer = csv.writer(f)
 		for row in output_plate_map:
 			writer.writerow(row)
 
 def create_protocol(dna_plate_map_dict, combinations_to_make, protocol_template_path, output_folder_path):
-	
+
 	# Get the contents of colony_pick_template.py, which contains the body of the protocol.
 	with open(protocol_template_path) as template_file:
 		template_string = template_file.read()
@@ -201,10 +201,9 @@ def create_protocol(dna_plate_map_dict, combinations_to_make, protocol_template_
 		# Paste the rest of the protocol.
 		protocol_file.write(template_string)
 
-#################################################################################################################
+################################################################################
 # Call main function
-#################################################################################################################
+################################################################################
 
 if __name__ == '__main__':
 	main()
-

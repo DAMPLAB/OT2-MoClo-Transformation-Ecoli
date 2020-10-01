@@ -1,9 +1,10 @@
 #Modified version 2/28/20
 
-'''
-	Up to 88 rxns per single run and 24 rxns for triplicate of each combination of DNA assembly
-	This protocol is optimized for maximum walkaway time and percision
-	'''
+################################################################################
+# Up to 88 rxns per single run and 24 rxns for triplicate of each combination of DNA assembly
+
+#This protocol is optimized for maximum walkaway time and percision
+################################################################################
 
 import time
 import math
@@ -11,11 +12,10 @@ import math
 from opentrons import robot, instruments, labware, modules
 
 num_rxns = len(combinations_to_make)
-#num_plates = math.ceil(num_rxns/24) # Amount of agar plates need for plating the transformed cells
 
-'''
-	For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the Opentrons 96 well aluminum block.
-	'''
+################################################################################
+# For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the Opentrons 96 well aluminum block.
+################################################################################
 
 # Load in Bio-Rad 96 Well Plate on temp deck for moclos, transformation, and outgrowth.
 temp_deck = modules.load('tempdeck', '10')
@@ -23,14 +23,11 @@ reaction_plate = labware.load('biorad_96_wellplate_200ul_pcr', '10', share=True)
 temp_deck.set_temperature(10)
 
 # Load in 1 10ul tiprack and 2 300ul tipracks
-tr_10 = [labware.load('opentrons_96_tiprack_10ul', '3')]#, labware.load('opentrons_96_tiprack_10ul', '6')]
-#for i in range(0, 1):
-#   tr_300.append(labware.load('tipone_96_tiprack_200ul', '9'))
+tr_10 = [labware.load('opentrons_96_tiprack_10ul', '3')]
 
-# Load in pipettes
 p10_single = instruments.P10_Single(mount='right', tip_racks=tr_10)
 
-''' Need to provide the instructions for loading reagent'''
+# Need to provide the instructions for loading reagent
 reagents_plate = labware.load(COLD_BLOCK, '4', 'Reagents Plate')
 ligase = reagents_plate.wells('H12') #MoClo
 restriction_enzyme = reagents_plate.wells('G12') #MoClo
@@ -43,20 +40,18 @@ water = trough.wells(0) #Well 1
 wash_0 = trough.wells(1) #Well 2
 wash_1 = trough.wells(2) #Well 3
 
-# Load in up to 2 DNA plates (Bio-Rad 96 Well Plate 200ul PCR)
-#plate_name = dna_plate_map_dict.keys() # because there should be only 1 input plate
-#input_dna_plate = labware.load('biorad_96_wellplate_200ul_pcr', '1', 'Input DNA Plate')
 dna_plate_dict = {}
 for plate_name in dna_plate_map_dict.keys():
 	dna_plate_dict[plate_name] = labware.load('biorad_96_wellplate_200ul_pcr', '1', 'Input DNA Plate')
 
 #available_deck_slots = ['2', '6', '8', '9', '11']
 
-#____________________________________Start the MoClo protocol_______________________________
+############################Start the MoClo protocol############################
 
-'''
-	For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the metal part.
-	'''
+################################################################################
+# For this protocol, the biorad_96_wellplate_200ul_pcr, is placed on the top of the TempDeck alone without the metal part.
+################################################################################
+
 # Add water, buffer, restriction enzyme, ligase, and buffer to 2x master mix (2xMM).
 #Prepare 2xMM for 2-part assembly at 20uL total volume
 for i in range(2):
@@ -164,38 +159,6 @@ for i in range(12):
 	p10_single.blow_out()
 p10_single.drop_tip()
 
-'''
-	# Add 2xMM to 2-part assembly for varies volumes (5,10,20 uL)
-	count = 0
-	for i in range(3):
-	for j in range(8):
-	p10_single.pick_up_tip()
-	p10_single.transfer(4*(2**i), reaction_plate.wells(89+(3*i)).bottom(0.3), reaction_plate.wells(3*j+count).bottom(0.3), new_tip='never')
-	p10_single.blow_out()
-	p10_single.drop_tip()
-	count += 1
-	
-	# Add 2xMM to 5-part assembly for varies volumes (5,10,20 uL)
-	count = 0
-	for i in range(3):
-	for j in range(8):
-	p10_single.pick_up_tip()
-	p10_single.transfer(2.5*(2**i), reaction_plate.wells(88+(3*i)).bottom(0.3), reaction_plate.wells(27+3*j+count).bottom(0.3), new_tip='never')
-	p10_single.blow_out()
-	p10_single.drop_tip()
-	count += 1
-	
-	# Add 2xMM to 8-part assembly for varies volumes (5,10,20 uL)
-	count = 0
-	for i in range(3):
-	for j in range(8):
-	p10_single.pick_up_tip()
-	p10_single.transfer(1*(2**i), reaction_plate.wells(87+(3*i)).bottom(0.3), reaction_plate.wells(54+3*j+count).bottom(0.3), new_tip='never')
-	p10_single.blow_out()
-	p10_single.drop_tip()
-	count += 1
-	'''
-
 #This function checks the existance of DNA parts and returns for well location of the parts
 def find_dna(name, dna_plate_map_dict, dna_plate_dict):
 	"""Return a well containing the named DNA."""
@@ -224,7 +187,7 @@ for i in combinations_to_make:
 		else:
 			combinations_by_part[j] = [name]
 
-#This section of the code combines and mix the DNA parts according to the combination list
+# This section of the code combines and mix the DNA parts according to the combination list
 for part, combinations in combinations_by_part.items():
 	part_well = find_dna(part, dna_plate_map_dict, dna_plate_dict)
 	combination_wells = [find_combination(x, combinations_to_make) for x in combinations]
@@ -247,39 +210,12 @@ for part, combinations in combinations_by_part.items():
 	# Two washing steps are added to allow recycling of the tips
 	p10_single.drop_tip()
 
-# Incubate rxns for 2 hr (moclo), seal the Reaction Plate with adhesive film
-'''
-	Seal the Reaction Plate to avoid liquid evaporation.
-	Discard the empty PCR tubes previously containing buffer, ligase, and restriction enzyme.
-	Remove the Input_DNA_Plate from the Deck Space. Remaining DNA may be saved by sealing the Input_DNA_Plate with adhesive film and storing at -20°C
-'''
-'''
-start_time = time.time()
-temp_deck.set_temperature(37)
-p10_single.delay(minutes=120)
-num_cols = math.ceil(num_rxns/8.0)
-'''#Adding 4 ul of water halfway through.
-	p10_single.pick_up_tip()
-	for i in combinations_to_make:
-	num_parts = len(i["parts"])
-	# Add an extra 4 ul of water for evaporation.
-	water_to_add = 4
-	well = find_combination(i["name"], combinations_to_make)
-	p10_single.transfer(water_to_add, water.bottom(), well.bottom(0.5), new_tip='never')
-	p10_single.mix(4, 10, well.bottom(0.5))
-	p10_single.mix(2, 10, wash_0.bottom(0.5))
-	p10_single.blow_out()
-	p10_single.mix(2, 10, wash_1.bottom(0.5))
-	p10_single.blow_out()
-	p10_single.drop_tip()
-	time_elapsed = time.time() - start_time
-	p10_single.delay(seconds=(120*60 - time_elapsed))
-	'''
-temp_deck.set_temperature(4)
-robot.pause()
-'''
+# Seal the Reaction Plate with adhesive film, and incubate plate for 35 cycles of 37C for 1.5 minutes and 16C for 3 minutes, followed by 1 cycle at 50C for 5 minutes, and 80C for 10 minutes.
+
+################################################################################
+# Seal the Reaction Plate to avoid liquid evaporation.
+# Discard the empty PCR tubes previously containing buffer, ligase, and restriction enzyme.
+# Remove the Input_DNA_Plate from the Deck Space. Remaining DNA may be saved by sealing the Input_DNA_Plate with adhesive film and storing at -20°C
+################################################################################
+
 temp_deck.deactivate()
-
-
-
-
