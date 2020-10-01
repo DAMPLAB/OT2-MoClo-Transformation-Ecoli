@@ -1,2 +1,2 @@
-output_folder_path: /Users/rita/Desktop
+output_folder_path: ../output_data
 protocol_template_path: data/moclo_transform_template.py
