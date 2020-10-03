@@ -13,9 +13,9 @@ All code for this project is freely distributed for academic and commercial uses
 
 1. Confirm that you have [Python 3](https://www.python.org/downloads/) installed.
 
-2. Download OT2 APP from Opentrons' website (https://opentrons.com/ot-app)
+2. Download [OT2 APP](https://opentrons.com/ot-app) from Opentrons' website.
 
-3. Clone the GitHub repository to a local computer.
+3. Clone the [GitHub repository](https://github.com/DAMPLAB/OT2-MoClo-Transformation-Ecoli) to a local computer.
 
 ## Modular Cloning, Cell Transformation, and Cell Plating
 
