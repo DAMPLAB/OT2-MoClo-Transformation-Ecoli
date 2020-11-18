@@ -1,4 +1,7 @@
-#Modified version 2/28/20
+# MoClo, Transformation, and Plating protocol
+# Written by Rita Chen
+# Updated by Rita Chen 2/28/20
+# Updated by Rita Chen 11/18/20
 
 ################################################################################
 # Up to 88 rxns per single run and 24 rxns for triplicate of each combination of DNA assembly
